@@ -7,10 +7,12 @@ namespace Defra.Livestock.Sdk.Api.Strategies.Tests;
 using Defra.Livestock.Sdk.Api.Strategies;
 using Defra.Livestock.Sdk.Api.Strategies.Abstractions.Context;
 using Defra.Livestock.Sdk.Api.Strategies.Abstractions.Operations;
+using Defra.Livestock.Sdk.Api.Strategies.Abstractions.Operations.Http.Rest.Client;
 using Defra.Livestock.Sdk.Api.Strategies.Abstractions.Operations.Http.Soap.Client;
 using Defra.Livestock.Sdk.Api.Strategies.Abstractions.Requests.Pagination;
 using Defra.Livestock.Sdk.Api.Strategies.Context;
 using Defra.Livestock.Sdk.Api.Strategies.Operations;
+using Defra.Livestock.Sdk.Api.Strategies.Operations.Http.Rest.Client;
 using Defra.Livestock.Sdk.Api.Strategies.Operations.Http.Soap.Client;
 using Defra.Livestock.Sdk.Api.Strategies.Requests.Pagination;
 using Defra.Livestock.Sdk.Api.Strategies.Tests.TestFramework.Services;
@@ -129,6 +131,42 @@ public class ServiceCollectionExtensionsTests
 
         // Assert
         var count = services.Count(sd => sd.ServiceType == typeof(ISoapHttpClient));
+        count.ShouldBe(1);
+    }
+
+    [Fact]
+    public void AddRestStrategyFactory_ShouldRegisterHttpClientAndTransientRestStrategyFactory()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+
+        // Act
+        var returnedServices = services.AddRestStrategyFactory<TestService>();
+
+        // Assert
+        returnedServices.ShouldBe(services);
+
+        var httpClientDescriptor = services.FirstOrDefault(sd => sd.ServiceType == typeof(IRestHttpClient));
+        httpClientDescriptor.ShouldNotBeNull();
+
+        var factoryDescriptor = services.FirstOrDefault(sd => sd.ServiceType == typeof(IRestStrategyFactory<TestService>));
+        factoryDescriptor.ShouldNotBeNull();
+        factoryDescriptor.ImplementationType.ShouldBe(typeof(RestStrategyFactory<TestService>));
+        factoryDescriptor.Lifetime.ShouldBe(ServiceLifetime.Transient);
+    }
+
+    [Fact]
+    public void AddRestStrategyFactory_WhenRestHttpClientAlreadyRegistered_ShouldNotReRegisterHttpClient()
+    {
+        // Arrange
+        var services = new ServiceCollection();
+        services.AddTransient<IRestHttpClient, RestHttpClient>();
+
+        // Act
+        services.AddRestStrategyFactory<TestService>();
+
+        // Assert
+        var count = services.Count(sd => sd.ServiceType == typeof(IRestHttpClient));
         count.ShouldBe(1);
     }
 }

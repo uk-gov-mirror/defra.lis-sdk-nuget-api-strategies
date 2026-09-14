@@ -126,8 +126,9 @@ public sealed partial class SoapHttpClient : ISoapHttpClient
 
         EmmitVerboseOutput("Created Soap Envelope:", await httpContent.ReadAsStringAsync(cancellationToken));
 
-        var httpRequest = new HttpRequestMessage(HttpMethod.Post, absoluteUrl) { Content = httpContent };
+        using var httpRequest = new HttpRequestMessage(HttpMethod.Post, absoluteUrl);
 
+        httpRequest.Content = httpContent;
         httpRequest.Content.Headers.ContentType = new MediaTypeHeaderValue(MediaType) { CharSet = "utf-8" };
 
         httpRequest.Headers.Add("SOAPAction", SoapAction);
