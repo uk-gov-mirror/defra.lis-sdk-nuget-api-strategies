@@ -16,7 +16,6 @@ using Defra.Livestock.Sdk.Api.Strategies.Operations.Constants;
 using Defra.Livestock.Sdk.Api.Strategies.Operations.Http.Constants;
 using Defra.Livestock.Sdk.Api.Strategies.Operations.Http.Rest;
 using Defra.Livestock.Sdk.Api.Strategies.Operations.Http.Rest.Constants;
-using Defra.Livestock.Sdk.Api.Strategies.Tests.TestFramework.Data;
 using Defra.Livestock.Sdk.Api.Strategies.Tests.TestFramework.Data.Repositories;
 using Defra.Livestock.Sdk.Api.Strategies.Tests.TestFramework.Services;
 using Microsoft.Extensions.Logging;
@@ -59,6 +58,8 @@ public class RestStrategyTests
         strategy.WithHead().ShouldBe(strategy);
         strategy.WithOptions().ShouldBe(strategy);
         strategy.WithQueryParameter("page", "1").ShouldBe(strategy);
+        strategy.WithQueryParameter(() => true, "active", "true").ShouldBe(strategy);
+        strategy.WithQueryParameter(() => false, "inactive", "false").ShouldBe(strategy);
         strategy.WithQueryParameters(queryParams).ShouldBe(strategy);
         strategy.WithPayload(new TestEntity { Id = "1", Name = "Test" }).ShouldBe(strategy);
         strategy.WithPayload(() => new TestEntity { Id = "1", Name = "Test" }).ShouldBe(strategy);
@@ -90,6 +91,43 @@ public class RestStrategyTests
 
         // Act & Assert
         Should.Throw<ArgumentNullException>(() => strategy.WithQueryParameters(null!));
+    }
+
+    [Fact]
+    public void WithQueryParameter_WithNullExpression_ShouldThrowArgumentNullException()
+    {
+        // Arrange
+        var strategy = new RestStrategy<TestService>(restHttpClient);
+
+        // Act & Assert
+        Should.Throw<ArgumentNullException>(() => strategy.WithQueryParameter(null!, "key", "val"));
+    }
+
+    [Fact]
+    public async Task Execute_WithConditionalQueryParameter_WhenTrue_ShouldIncludeParameter()
+    {
+        // Arrange
+        var strategy = ConfigureValidStrategy(restHttpClient, logger)
+            .WithQueryParameter(() => true, "filter", "active")
+            .WithQueryParameter(() => false, "deleted", "true");
+
+        restHttpClient.SendAsync(
+                Arg.Any<HttpMethod>(),
+                Arg.Any<string?>(),
+                Arg.Any<string?>(),
+                Arg.Any<CancellationToken>())
+            .Returns(Task.FromResult(new RestResponse
+            {
+                StatusCode = HttpStatusCode.OK, HasContent = true, Content = "{\"id\":\"1\",\"name\":\"Test\"}",
+            }));
+
+        // Act
+        var result = await strategy.Execute<TestEntity>();
+
+        // Assert
+        result.ShouldNotBeNull();
+        restHttpClient.Received(1).WithQueryParameter("filter", "active");
+        restHttpClient.DidNotReceive().WithQueryParameter("deleted", "true");
     }
 
     [Fact]
@@ -280,9 +318,7 @@ public class RestStrategyTests
                 Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new RestResponse
             {
-                StatusCode = HttpStatusCode.OK,
-                HasContent = true,
-                Content = "{\"id\":\"1\",\"name\":\"John\"}",
+                StatusCode = HttpStatusCode.OK, HasContent = true, Content = "{\"id\":\"1\",\"name\":\"John\"}",
             }));
 
         // Act
@@ -376,9 +412,7 @@ public class RestStrategyTests
                 Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new RestResponse
             {
-                StatusCode = HttpStatusCode.OK,
-                HasContent = false,
-                Content = null,
+                StatusCode = HttpStatusCode.OK, HasContent = false, Content = null,
             }));
 
         // Act & Assert
@@ -399,16 +433,12 @@ public class RestStrategyTests
                 Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new RestResponse
             {
-                StatusCode = HttpStatusCode.OK,
-                HasContent = true,
-                Content = "{\"id\":\"1\",\"name\":\"John\"}",
+                StatusCode = HttpStatusCode.OK, HasContent = true, Content = "{\"id\":\"1\",\"name\":\"John\"}",
             }));
 
         // Act
-        var result = await strategy.ExecuteAndTransform<TestEntity, TestResult>(e => new TestResult
-        {
-            MappedName = e.Name,
-        });
+        var result =
+            await strategy.ExecuteAndTransform<TestEntity, TestResult>(e => new TestResult { MappedName = e.Name, });
 
         // Assert
         result.ShouldNotBeNull();
@@ -429,9 +459,7 @@ public class RestStrategyTests
                 Arg.Any<CancellationToken>())
             .Returns(Task.FromResult(new RestResponse
             {
-                StatusCode = HttpStatusCode.NoContent,
-                HasContent = false,
-                Content = null,
+                StatusCode = HttpStatusCode.NoContent, HasContent = false, Content = null,
             }));
 
         // Act

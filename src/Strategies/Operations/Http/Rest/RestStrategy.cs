@@ -116,6 +116,18 @@ public sealed class RestStrategy<TService>
         return this;
     }
 
+    public IRestStrategy<TService> WithQueryParameter(Func<bool> expression, string name, string value)
+    {
+        ArgumentNullException.ThrowIfNull(expression);
+
+        if (expression())
+        {
+            WithQueryParameter(name, value);
+        }
+
+        return this;
+    }
+
     public IRestStrategy<TService> WithQueryParameters(IDictionary<string, string> queryParameters)
     {
         ArgumentNullException.ThrowIfNull(queryParameters);

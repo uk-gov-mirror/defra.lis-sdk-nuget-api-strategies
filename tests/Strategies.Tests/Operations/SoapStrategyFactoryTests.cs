@@ -39,6 +39,7 @@ public class SoapStrategyFactoryTests
         factory.WithDefaultServiceUrl("service").ShouldBe(factory);
         factory.WithDefaultSoapAction("urn:action").ShouldBe(factory);
         factory.WithDefaultMediaType("text/xml").ShouldBe(factory);
+        factory.WithDefaultBasicAuth("admin", "secret").ShouldBe(factory);
         factory.WithDefaultXmlDeclaration(true).ShouldBe(factory);
         factory.WithDefaultVerboseOutput((_, _) => { }).ShouldBe(factory);
     }
@@ -58,6 +59,7 @@ public class SoapStrategyFactoryTests
             .WithDefaultServiceUrl("service")
             .WithDefaultSoapAction("urn:action")
             .WithDefaultMediaType("text/xml")
+            .WithDefaultBasicAuth("admin", "secret123")
             .WithDefaultXmlDeclaration(true)
             .WithDefaultVerboseOutput((_, _) => verboseCalled = true);
 
@@ -86,6 +88,12 @@ public class SoapStrategyFactoryTests
             .ShouldBe("urn:action");
 
         typeof(SoapStrategy<TestService>).GetProperty("MediaType", flags)?.GetValue(soapStrategy).ShouldBe("text/xml");
+
+        var headers = (Dictionary<string, string>?)typeof(SoapStrategy<TestService>)
+            .GetProperty("Headers", flags)?.GetValue(soapStrategy);
+        headers.ShouldNotBeNull();
+        var expectedAuth = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes("admin:secret123"));
+        headers["Authorization"].ShouldBe(expectedAuth);
 
         typeof(SoapStrategy<TestService>).GetProperty("IncludeXmlDeclaration", flags)?.GetValue(soapStrategy)
             .ShouldBe(true);

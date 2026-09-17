@@ -8,11 +8,11 @@ using System.Text.Json;
 using Defra.Livestock.Sdk.Api.Strategies.Abstractions.Operations;
 using Defra.Livestock.Sdk.Api.Strategies.Abstractions.Operations.Http.Rest;
 using Defra.Livestock.Sdk.Api.Strategies.Abstractions.Operations.Http.Rest.Client;
-using Defra.Livestock.Sdk.Api.Strategies.Operations.Base;
+using Defra.Livestock.Sdk.Api.Strategies.Operations.Http.Base;
 using Defra.Livestock.Sdk.Api.Strategies.Operations.Http.Rest;
 using Microsoft.Extensions.DependencyInjection;
 
-public sealed class RestStrategyFactory<TService> : StrategyFactoryBase<TService, IRestStrategyFactory<TService>>,
+public sealed class RestStrategyFactory<TService> : HttpStrategyFactoryBase<TService, IRestStrategyFactory<TService>>,
     IRestStrategyFactory<TService>
     where TService : class
 {
@@ -24,29 +24,9 @@ public sealed class RestStrategyFactory<TService> : StrategyFactoryBase<TService
         SetParentFactory(this);
     }
 
-    private string? DefaultApiDescription { get; set; }
-
-    private string? DefaultBaseUrl { get; set; }
-
     private string? DefaultResourceUrl { get; set; }
 
-    private string? DefaultMediaType { get; set; }
-
     private JsonSerializerOptions? DefaultJsonSerializerOptions { get; set; }
-
-    private Action<string, string?>? DefaultVerboseOutputAction { get; set; }
-
-    public IRestStrategyFactory<TService> WithDefaultApiDescription(string entityDescription)
-    {
-        DefaultApiDescription = entityDescription;
-        return this;
-    }
-
-    public IRestStrategyFactory<TService> WithDefaultBaseUrl(string baseUrl)
-    {
-        DefaultBaseUrl = baseUrl;
-        return this;
-    }
 
     public IRestStrategyFactory<TService> WithDefaultResourceUrl(string resourceUrl)
     {
@@ -54,21 +34,9 @@ public sealed class RestStrategyFactory<TService> : StrategyFactoryBase<TService
         return this;
     }
 
-    public IRestStrategyFactory<TService> WithDefaultMediaType(string mediaType)
-    {
-        DefaultMediaType = mediaType;
-        return this;
-    }
-
     public IRestStrategyFactory<TService> WithDefaultJsonSerializerOptions(JsonSerializerOptions jsonSerializerOptions)
     {
         DefaultJsonSerializerOptions = jsonSerializerOptions;
-        return this;
-    }
-
-    public IRestStrategyFactory<TService> WithDefaultVerboseOutput(Action<string, string?> verboseOutputAction)
-    {
-        DefaultVerboseOutputAction = verboseOutputAction;
         return this;
     }
 
@@ -85,26 +53,11 @@ public sealed class RestStrategyFactory<TService> : StrategyFactoryBase<TService
 
     private void AttachDefaults(RestStrategy<TService> strategyBuilder)
     {
-        AttachDefaultsToBuilder(strategyBuilder);
-
-        if (DefaultApiDescription != null)
-        {
-            strategyBuilder.WithApiDescription(DefaultApiDescription);
-        }
-
-        if (DefaultBaseUrl != null)
-        {
-            strategyBuilder.WithBaseUrl(DefaultBaseUrl);
-        }
+        AttachHttpDefaultsToBuilder(strategyBuilder);
 
         if (DefaultResourceUrl != null)
         {
             strategyBuilder.WithResourceUrl(DefaultResourceUrl);
-        }
-
-        if (DefaultMediaType != null)
-        {
-            strategyBuilder.WithMediaType(DefaultMediaType);
         }
 
         if (DefaultJsonSerializerOptions != null)

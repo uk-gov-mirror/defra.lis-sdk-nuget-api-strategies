@@ -111,4 +111,36 @@ public class HttpStrategyBaseTests
         // Act & Assert
         Should.Throw<ArgumentException>(() => strategy.WithHeader(name!, value!));
     }
+
+    [Fact]
+    public void WithBasicAuth_WithValidCredentials_ShouldSetAuthorizationHeaderAndReturnParent()
+    {
+        // Arrange
+        var strategy = new TestHttpStrategy();
+
+        // Act
+        var result = strategy.WithBasicAuth("admin", "secret123");
+
+        // Assert
+        result.ShouldBe(strategy);
+
+        var expectedAuth = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes("admin:secret123"));
+        strategy.GetHeaders()["Authorization"].ShouldBe(expectedAuth);
+    }
+
+    [Theory]
+    [InlineData(null, "password")]
+    [InlineData("", "password")]
+    [InlineData(" ", "password")]
+    [InlineData("username", null)]
+    [InlineData("username", "")]
+    [InlineData("username", " ")]
+    public void WithBasicAuth_WithInvalidCredentials_ShouldThrowArgumentException(string? username, string? password)
+    {
+        // Arrange
+        var strategy = new TestHttpStrategy();
+
+        // Act & Assert
+        Should.Throw<ArgumentException>(() => strategy.WithBasicAuth(username!, password!));
+    }
 }

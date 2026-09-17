@@ -7,11 +7,11 @@ namespace Defra.Livestock.Sdk.Api.Strategies.Operations;
 using Defra.Livestock.Sdk.Api.Strategies.Abstractions.Operations;
 using Defra.Livestock.Sdk.Api.Strategies.Abstractions.Operations.Http.Soap;
 using Defra.Livestock.Sdk.Api.Strategies.Abstractions.Operations.Http.Soap.Client;
-using Defra.Livestock.Sdk.Api.Strategies.Operations.Base;
+using Defra.Livestock.Sdk.Api.Strategies.Operations.Http.Base;
 using Defra.Livestock.Sdk.Api.Strategies.Operations.Http.Soap;
 using Microsoft.Extensions.DependencyInjection;
 
-public sealed class SoapStrategyFactory<TService> : StrategyFactoryBase<TService, ISoapStrategyFactory<TService>>,
+public sealed class SoapStrategyFactory<TService> : HttpStrategyFactoryBase<TService, ISoapStrategyFactory<TService>>,
     ISoapStrategyFactory<TService>
     where TService : class
 {
@@ -23,31 +23,11 @@ public sealed class SoapStrategyFactory<TService> : StrategyFactoryBase<TService
         SetParentFactory(this);
     }
 
-    private string? DefaultApiDescription { get; set; }
-
-    private string? DefaultBaseUrl { get; set; }
-
     private string? DefaultServiceUrl { get; set; }
 
     private string? DefaultSoapAction { get; set; }
 
-    private string? DefaultMediaType { get; set; }
-
     private bool? DefaultXmlDeclaration { get; set; }
-
-    private Action<string, string?>? DefaultVerboseOutputAction { get; set; }
-
-    public ISoapStrategyFactory<TService> WithDefaultApiDescription(string entityDescription)
-    {
-        DefaultApiDescription = entityDescription;
-        return this;
-    }
-
-    public ISoapStrategyFactory<TService> WithDefaultBaseUrl(string baseUrl)
-    {
-        DefaultBaseUrl = baseUrl;
-        return this;
-    }
 
     public ISoapStrategyFactory<TService> WithDefaultServiceUrl(string serviceUrl)
     {
@@ -61,21 +41,9 @@ public sealed class SoapStrategyFactory<TService> : StrategyFactoryBase<TService
         return this;
     }
 
-    public ISoapStrategyFactory<TService> WithDefaultMediaType(string mediaType)
-    {
-        DefaultMediaType = mediaType;
-        return this;
-    }
-
     public ISoapStrategyFactory<TService> WithDefaultXmlDeclaration(bool withDefaultXmlDeclaration)
     {
         DefaultXmlDeclaration = withDefaultXmlDeclaration;
-        return this;
-    }
-
-    public ISoapStrategyFactory<TService> WithDefaultVerboseOutput(Action<string, string?> verboseOutputAction)
-    {
-        DefaultVerboseOutputAction = verboseOutputAction;
         return this;
     }
 
@@ -92,17 +60,7 @@ public sealed class SoapStrategyFactory<TService> : StrategyFactoryBase<TService
 
     private void AttachDefaults(SoapStrategy<TService> strategyBuilder)
     {
-        AttachDefaultsToBuilder(strategyBuilder);
-
-        if (DefaultApiDescription != null)
-        {
-            strategyBuilder.WithApiDescription(DefaultApiDescription);
-        }
-
-        if (DefaultBaseUrl != null)
-        {
-            strategyBuilder.WithBaseUrl(DefaultBaseUrl);
-        }
+        AttachHttpDefaultsToBuilder(strategyBuilder);
 
         if (DefaultServiceUrl != null)
         {
@@ -112,11 +70,6 @@ public sealed class SoapStrategyFactory<TService> : StrategyFactoryBase<TService
         if (DefaultSoapAction != null)
         {
             strategyBuilder.WithSoapAction(DefaultSoapAction);
-        }
-
-        if (DefaultMediaType != null)
-        {
-            strategyBuilder.WithMediaType(DefaultMediaType);
         }
 
         if (DefaultXmlDeclaration != null)

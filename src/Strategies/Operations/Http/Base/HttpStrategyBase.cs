@@ -4,6 +4,7 @@
 
 namespace Defra.Livestock.Sdk.Api.Strategies.Operations.Http.Base;
 
+using System.Text;
 using Defra.Livestock.Sdk.Api.Strategies.Abstractions.Operations.Http.Base;
 using Defra.Livestock.Sdk.Api.Strategies.Operations.Base;
 
@@ -53,6 +54,18 @@ public abstract class HttpStrategyBase<TService, TParent> : StrategyBase<TServic
         ArgumentException.ThrowIfNullOrWhiteSpace(mediaType);
 
         MediaType = mediaType;
+
+        return GetParentBuilder();
+    }
+
+    public TParent WithBasicAuth(string username, string password)
+    {
+        ArgumentException.ThrowIfNullOrWhiteSpace(username);
+        ArgumentException.ThrowIfNullOrWhiteSpace(password);
+
+        var encoded = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{username}:{password}"));
+
+        Headers["Authorization"] = encoded;
 
         return GetParentBuilder();
     }

@@ -47,6 +47,15 @@ Each factory can be injected into your service and pre-configured with default v
 - `WithDefaultLogger(ILogger<TService> logger)` - Sets the default logger for all strategies built by this factory.
 - `WithDefaultOperatorContext(IOperatorContext operatorContext)` - Sets the default operator context for user authorization / auditing.
 
+### Common HTTP Strategy Factory Methods (`HttpStrategyFactoryBase<TService, TFactory>`)
+
+Shared by `SoapStrategyFactory` and `RestStrategyFactory`:
+- `WithDefaultApiDescription(string entityDescription)` - Sets default API description.
+- `WithDefaultBaseUrl(string baseUrl)` - Sets default base URL.
+- `WithDefaultMediaType(string mediaType)` - Sets default media type.
+- `WithDefaultBasicAuth(string username, string password)` - Sets default Basic Authentication credentials.
+- `WithDefaultVerboseOutput(Action<string, string?> verboseOutputAction)` - Sets default verbose output handler for request/response logging.
+
 ---
 
 ## 1. Repository Strategies (`IRepoStrategyFactory<TService>`)
@@ -422,6 +431,7 @@ public class ExternalSoapService
             .WithDefaultServiceUrl("/ws/animals.asmx")
             .WithDefaultSoapAction("http://tempuri.org/GetAnimalDetails")
             .WithDefaultMediaType("text/xml")
+            .WithDefaultBasicAuth("admin", "secretPassword")
             .WithDefaultXmlDeclaration(false);
     }
 }
@@ -433,6 +443,7 @@ public class ExternalSoapService
 - `WithDefaultServiceUrl(string serviceUrl)` - Sets default service URL / relative path.
 - `WithDefaultSoapAction(string soapAction)` - Sets default SOAP action header value.
 - `WithDefaultMediaType(string mediaType)` - Sets default media type (e.g. `text/xml`).
+- `WithDefaultBasicAuth(string username, string password)` - Sets default Basic Authentication credentials.
 - `WithDefaultXmlDeclaration(bool withDefaultXmlDeclaration)` - Sets whether to include the XML declaration.
 - `WithDefaultVerboseOutput(Action<string, string?> verboseOutputAction)` - Sets default verbose output handler for payload/response logging.
 
@@ -444,6 +455,7 @@ Created via `_soapFactory.BuildSoapStrategy()`.
 - `WithBaseUrl(string baseUrl)` - Sets the base URL.
 - `WithServiceUrl(string serviceUrl)` - Sets the service URL / relative endpoint.
 - `WithSoapAction(string soapAction)` - Sets the `SOAPAction` header.
+- `WithBasicAuth(string username, string password)` - Sets Basic Authentication credentials on the request header.
 - `WithHeader(string name, string value)` - Adds an HTTP header.
 - `WithMediaType(string mediaType)` - Sets the HTTP Content-Type / Media-Type (e.g., `text/xml`).
 - `WithXmlDeclaration(bool includeXmlDeclaration)` - Configures whether to include XML declaration in request body.
@@ -565,6 +577,7 @@ public class ExternalRestService
             .WithDefaultBaseUrl("https://api.service.gov.uk")
             .WithDefaultResourceUrl("/api/v1/movements")
             .WithDefaultMediaType("application/json")
+            .WithDefaultBasicAuth("api_user", "api_token")
             .WithDefaultJsonSerializerOptions(new JsonSerializerOptions
             {
                 PropertyNameCaseInsensitive = true,
@@ -579,6 +592,7 @@ public class ExternalRestService
 - `WithDefaultBaseUrl(string baseUrl)` - Sets default base URL.
 - `WithDefaultResourceUrl(string resourceUrl)` - Sets default resource URL / relative path.
 - `WithDefaultMediaType(string mediaType)` - Sets default media type (defaults to `application/json`).
+- `WithDefaultBasicAuth(string username, string password)` - Sets default Basic Authentication credentials.
 - `WithDefaultJsonSerializerOptions(JsonSerializerOptions jsonSerializerOptions)` - Sets default JSON serialization options.
 - `WithDefaultVerboseOutput(Action<string, string?> verboseOutputAction)` - Sets default verbose output handler for request/response logging.
 
@@ -597,7 +611,9 @@ Created via `_restFactory.BuildRestStrategy()`.
 - `WithBaseUrl(string baseUrl)` - Sets/overrides base URL.
 - `WithResourceUrl(string resourceUrl)` - Sets request resource URL / relative path.
 - `WithQueryParameter(string name, string value)` - Appends a single query string parameter.
+- `WithQueryParameter(Func<bool> expression, string name, string value)` - Appends a query string parameter conditionally if the expression evaluates to `true`.
 - `WithQueryParameters(IDictionary<string, string> queryParameters)` - Appends multiple query string parameters.
+- `WithBasicAuth(string username, string password)` - Sets Basic Authentication credentials on the request header.
 - `WithHeader(string name, string value)` - Adds an HTTP request header.
 - `WithMediaType(string mediaType)` - Sets the request media type (defaults to `application/json`).
 - `WithApiDescription(string apiDescription)` - Sets the descriptive API name for logging.
@@ -623,6 +639,8 @@ MovementResponseDto result = await _restFactory.BuildRestStrategy()
     .WithPost()
     .WithResourceUrl("/api/v1/movements")
     .WithQueryParameter("validateOnly", "false")
+    .WithQueryParameter(() => includeAuditDetails, "audit", "true")
+    .WithBasicAuth("api_user", "api_token")
     .WithHeader("X-Correlation-ID", Guid.NewGuid().ToString())
     .WithPayload(new CreateMovementRequest
     {
