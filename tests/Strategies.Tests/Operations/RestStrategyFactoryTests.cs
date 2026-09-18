@@ -91,7 +91,7 @@ public class RestStrategyFactoryTests
         var headers = (Dictionary<string, string>?)typeof(RestStrategy<TestService>)
             .GetProperty("Headers", flags)?.GetValue(restStrategy);
         headers.ShouldNotBeNull();
-        var expectedAuth = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes("admin:secret123"));
+        var expectedAuth = $"Basic {Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes("admin:secret123"))}";
         headers["Authorization"].ShouldBe(expectedAuth);
 
         typeof(RestStrategy<TestService>).GetProperty("JsonSerializerOptions", flags)?.GetValue(restStrategy)

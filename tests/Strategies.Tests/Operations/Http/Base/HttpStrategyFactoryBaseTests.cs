@@ -75,7 +75,7 @@ public class HttpStrategyFactoryBaseTests
         strategy.GetBaseUrl().ShouldBe("https://example.com");
         strategy.GetMediaType().ShouldBe("application/json");
 
-        var expectedAuth = Convert.ToBase64String(Encoding.UTF8.GetBytes("admin:secret123"));
+        var expectedAuth = $"Basic {Convert.ToBase64String(Encoding.UTF8.GetBytes("admin:secret123"))}";
         strategy.GetHeaders()["Authorization"].ShouldBe(expectedAuth);
     }
 

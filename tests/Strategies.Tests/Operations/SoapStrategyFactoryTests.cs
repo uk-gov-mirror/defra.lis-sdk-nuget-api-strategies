@@ -92,7 +92,7 @@ public class SoapStrategyFactoryTests
         var headers = (Dictionary<string, string>?)typeof(SoapStrategy<TestService>)
             .GetProperty("Headers", flags)?.GetValue(soapStrategy);
         headers.ShouldNotBeNull();
-        var expectedAuth = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes("admin:secret123"));
+        var expectedAuth = $"Basic {Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes("admin:secret123"))}";
         headers["Authorization"].ShouldBe(expectedAuth);
 
         typeof(SoapStrategy<TestService>).GetProperty("IncludeXmlDeclaration", flags)?.GetValue(soapStrategy)

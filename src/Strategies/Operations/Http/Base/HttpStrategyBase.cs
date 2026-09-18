@@ -65,7 +65,7 @@ public abstract class HttpStrategyBase<TService, TParent> : StrategyBase<TServic
 
         var encoded = Convert.ToBase64String(Encoding.UTF8.GetBytes($"{username}:{password}"));
 
-        Headers["Authorization"] = encoded;
+        Headers["Authorization"] = $"Basic {encoded}";
 
         return GetParentBuilder();
     }

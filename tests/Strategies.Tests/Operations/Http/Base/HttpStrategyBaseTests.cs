@@ -124,7 +124,7 @@ public class HttpStrategyBaseTests
         // Assert
         result.ShouldBe(strategy);
 
-        var expectedAuth = Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes("admin:secret123"));
+        var expectedAuth = $"Basic {Convert.ToBase64String(System.Text.Encoding.UTF8.GetBytes("admin:secret123"))}";
         strategy.GetHeaders()["Authorization"].ShouldBe(expectedAuth);
     }
 
